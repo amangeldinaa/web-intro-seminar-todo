@@ -1,4 +1,6 @@
 import "./App.css";
+import { useState } from "react";
+import { v4 as uuid } from "uuid";
 
 // button-group
 const buttons = [
@@ -16,28 +18,64 @@ const buttons = [
   },
 ];
 
-const items = [
+const itemsData = [
   {
-    key: 1,
+    key: uuid(),
     label: "Have fun",
   },
   {
-    key: 2,
+    key: uuid(),
     label: "Spread Empathy",
   },
   {
-    key: 3,
+    key: uuid(),
     label: "Generate Value",
   },
 ];
 
 function App() {
+  const [itemToDo, setItemTodo] = useState("");
+  const [items, setItems] = useState(itemsData);
+  const [type, setType] = useState("all");
+
+  const handleItemToDo = (event) => {
+    setItemTodo(event.target.value);
+  };
+
+  const handleAddItem = () => {
+    const newObj = { key: uuid(), label: itemToDo };
+
+    setItems([newObj, ...items]);
+  };
+
+  const handleItemDone = (key) => {
+    const newArray = items.map((item) => {
+      if (item.key === key) {
+        return { ...item, isDone: !item.isDone };
+      } else return item;
+    });
+
+    setItems(newArray);
+  };
+
+  const handleChangeStatus = (type) => {
+    setType(type);
+  };
+
+  const doneItems = items.filter((item) => item.isDone);
+  const notDoneItems = items.filter((item) => !item.isDone);
+
+  const filteredItems =
+    type === "active" ? notDoneItems : type === "done" ? doneItems : items;
+
   return (
     <div className="todo-app">
       {/* App-header */}
       <div className="app-header d-flex">
         <h1>Todo List</h1>
-        <h2>5 more to do, 2 done</h2>
+        <h2>
+          {notDoneItems.length} more to do, {doneItems.length} done
+        </h2>
       </div>
 
       <div className="top-panel d-flex">
@@ -49,67 +87,60 @@ function App() {
         />
         {/* Item-status-filter */}
         <div className="btn-group">
-          <button type="button" className="btn  btn-info">
-            All
-          </button>
-          <button type="button" className="btn btn-outline-info">
-            Active
-          </button>
-          <button type="button" className="btn btn-outline-info">
-            Done
-          </button>
+          {buttons.map((itemB) => (
+            <button
+              key={itemB.type}
+              type="button"
+              // type
+              className={`btn btn${type === itemB.type ? "" : "-outline"}-info`}
+              onClick={() => handleChangeStatus(itemB.type)}
+            >
+              {itemB.label}
+            </button>
+          ))}
         </div>
       </div>
 
       {/* List-group */}
       <ul className="list-group todo-list">
-        <li className="list-group-item">
-          <span className="todo-list-item">
-            <span className="todo-list-item-label">Have Fun</span>
+        {filteredItems.map((item) => (
+          <li
+            key={item.key}
+            className="list-group-item"
+            onClick={() => handleItemDone(item.key)}
+          >
+            <span className={`todo-list-item ${item.isDone ? "done" : ""}`}>
+              <span className="todo-list-item-label">{item.label}</span>
 
-            <button
-              type="button"
-              className="btn btn-outline-success btn-sm float-right"
-            >
-              <i className="fa fa-exclamation" />
-            </button>
+              <button
+                type="button"
+                className="btn btn-outline-success btn-sm float-right"
+              >
+                <i className="fa fa-exclamation" />
+              </button>
 
-            <button
-              type="button"
-              className="btn btn-outline-danger btn-sm float-right"
-            >
-              <i className="fa fa-trash-o" />
-            </button>
-          </span>
-        </li>
-        <li className="list-group-item">
-          <span className="todo-list-item done">
-            <span className="todo-list-item-label">Spread Empathy</span>
-
-            <button
-              type="button"
-              className="btn btn-outline-success btn-sm float-right"
-            >
-              <i className="fa fa-exclamation" />
-            </button>
-
-            <button
-              type="button"
-              className="btn btn-outline-danger btn-sm float-right"
-            >
-              <i className="fa fa-trash-o" />
-            </button>
-          </span>
-        </li>
+              <button
+                type="button"
+                className="btn btn-outline-danger btn-sm float-right"
+              >
+                <i className="fa fa-trash-o" />
+              </button>
+            </span>
+          </li>
+        ))}
       </ul>
 
       <div className="item-add-form d-flex">
         <input
+          value={itemToDo}
+          onChange={handleItemToDo}
           type="text"
           className="form-control"
           placeholder="What needs to be done"
         />
-        <button className="btn btn-outline-secondary">Add item</button>
+        <button className="btn btn-outline-secondary" onClick={handleAddItem}>
+          Add item
+        </button>
       </div>
     </div>
   );
