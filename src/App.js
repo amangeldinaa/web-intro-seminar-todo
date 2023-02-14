@@ -1,6 +1,6 @@
 import "./App.css";
 import { useState } from "react";
-import { v4 as uuid } from "uuid";
+import { v4 as uuid } from "uuid";  //npm i uuid
 
 // button-group
 const buttons = [
@@ -34,53 +34,54 @@ const itemsData = [
 ];
 
 function App() {
+
   const [value, setValue] = useState("");
   const [items, setItems] = useState(itemsData);
   const [type, setType] = useState("all");
 
-  const handleChangeValue = (event) => {
-    setValue(event.target.value);
-  };
+  const handleItemAdd = (e) => {
+    setValue(e.target.value)
+  }
 
-  const handleAddItem = () => {
-    // no methods => push, pop, splice, shift, unshift, concat, etc.
-    // yes methods => spread operator, filter, find, map, forEach, slice, etc.
+  const handleSubmit = () => {
+    // no methods: push, pop, shift, unshift, concat => they change original array
+    // yes methods: spread operator, foreach, map, filter, slice => they copy original array 
     const newItem = {
       key: uuid(),
-      label: value,
-    };
-    const newItems = [newItem, ...items];
+      label: value
+    } 
+    setItems([...items, newItem])
+  }
 
-    setItems(newItems);
-  };
+  const handleDone = (keyFromButton) => {
+    const index = items.findIndex(item => item.key === keyFromButton)
+    const oldObject = items[index]
+    const newObject = {...oldObject, isDone: !oldObject.isDone}
+    const leftPart = items.slice(0, index)
+    const rightPart = items.slice(index+1, items.length)
+    const newItems = [...leftPart, newObject, ...rightPart]
+    setItems(newItems)
+    // 1. find index element
+    // 2. create new element and change isDone field
+    // 3. replace new element in items
+  }
 
-  const handleItemDone = (keyFromLabel) => {
-    const index = items.findIndex((item) => item.key === keyFromLabel); //3
-    const oldObj = items[index]; // => {key:key,label:label,isDone:true}
+  const handleStatus = (typeFromButton) => {
+    setType(typeFromButton)
+  }
 
-    //isMyObject Done?true or false
+  const handleDelete = (keyFromButton) => {
+    const index = items.findIndex(item => item.key === keyFromButton)
+    const leftPart = items.slice(0, index)
+    const rightPart = items.slice(index+1, items.length)
+    const newItems = [...leftPart, ...rightPart]
+    setItems(newItems)
+  }
 
-    const newObj = { ...oldObj, isDone: !oldObj.isDone }; //=>{key:key,label:label,isDone:true}
-
-    const leftPart = items.slice(0, index);
-    const rightPart = items.slice(index + 1, items.length);
-    const newItems = [...leftPart, newObj, ...rightPart];
-    // items=>[1,2,3,{key:key,label:label,isDone:true},6]
-
-    setItems(newItems);
-  };
-
-  const handleChangeStatus = (typeFromButton) => {
-    // all || active || done
-    setType(typeFromButton);
-  };
-
-  const filteredItems =
-    type === "all"
-      ? items
-      : type === "done"
-      ? items.filter((item) => item.isDone)
-      : items.filter((item) => !item.isDone);
+  const filteredItems = items.filter(item => 
+      type === 'all' ? item 
+      : type === 'active' ? !item.isDone 
+      : item.isDone)
 
   return (
     <div className="todo-app">
@@ -103,8 +104,8 @@ function App() {
             <button
               key={itemB.type}
               type="button"
-              className={`btn btn${itemB.type === type ? "" : "-outline"}-info`}
-              onClick={() => handleChangeStatus(itemB.type)}
+              className={`btn btn${itemB.type===type ? "" : "-outline"}-info`}
+              onClick={()=>handleStatus(itemB.type)}
             >
               {itemB.label}
             </button>
@@ -116,10 +117,12 @@ function App() {
       <ul className="list-group todo-list">
         {filteredItems.map((item) => (
           <li key={item.key} className="list-group-item">
-            <span className={`todo-list-item ${item.isDone ? "done" : ""}`}>
+            <span className={`todo-list-item ${item.isDone? "done" : ""}`} 
+            // onClick={()=>handleDone(item.key)}
+            >
               <span
                 className="todo-list-item-label"
-                onClick={() => handleItemDone(item.key)}
+                onClick={()=>handleDone(item.key)}
               >
                 {item.label}
               </span>
@@ -134,6 +137,7 @@ function App() {
               <button
                 type="button"
                 className="btn btn-outline-danger btn-sm float-right"
+                onClick={() => handleDelete(item.key)}
               >
                 <i className="fa fa-trash-o" />
               </button>
@@ -145,12 +149,12 @@ function App() {
       <div className="item-add-form d-flex">
         <input
           value={value}
-          onChange={handleChangeValue}
           type="text"
           className="form-control"
           placeholder="What needs to be done"
+          onChange={handleItemAdd}
         />
-        <button className="btn btn-outline-secondary" onClick={handleAddItem}>
+        <button className="btn btn-outline-secondary" onClick={handleSubmit}>
           Add item
         </button>
       </div>
@@ -159,3 +163,4 @@ function App() {
 }
 
 export default App;
+
